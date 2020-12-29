@@ -3,51 +3,99 @@ const ctx = canvas.getContext("2d");
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
 let particleArry;
-
-let speed = 1.5;
-let MinSize = 5;
-let MaxSize = 10;
-let particleNumber = 200;
-let starSpike = 5;
-let snowStick = 4;
-//star,circle,squre,triangle,hexagon,stick,snow
-let shapeType = "snow"; 
-let shapeFill = false;
+let particleObj = {
+    speed: 3,
+    MinSize: 5,
+    MaxSize: 10,
+    particleNumber: 300,
+    starSpike: 6,
+    snowStick: 10,
+    shapeArray: [
+        "star",
+        "circle",
+        "squre",
+        "triangle",
+        "hexagon",
+        "snow",
+    ],
+    shapeFill: false,
+};
+if (particleObj.speed == undefined) {
+    //if objuct is undefined
+    particleObj.speed = 2;
+}
+if (particleObj.MinSize == undefined) {
+    particleObj.MinSize = 5;
+}
+if (particleObj.MaxSize == undefined) {
+    particleObj.MaxSize = 10;
+}
+if (particleObj.particleNumber == undefined) {
+    particleObj.particleNumber = 200;
+}
+if (particleObj.starSpike == undefined) {
+    particleObj.starSpike = 6;
+}
+if (particleObj.snowStick == undefined) {
+    particleObj.snowStick = 10;
+}
+if (particleObj.shapeFill == undefined) {
+    particleObj.shapeFill = true;
+}
+if (particleObj.shapeArray == undefined) {
+    particleObj.shapeArray = [
+        "star",
+        "circle",
+        "squre",
+        "triangle",
+        "hexagon",
+        "snow",
+    ];
+}
 
 class Particle {
-    constructor(x, y, directionX, directionY, size, color) {
+    constructor(x, y, directionX, directionY, size, color, shapeType) {
         this.x = x;
         this.y = y;
         this.directionX = directionX;
         this.directionY = directionY;
         this.size = size;
         this.color = color;
+        this.shapeType = shapeType;
     }
     draw() {
-        if (shapeType == "circle") {
+        if (this.shapeType == "circle") {
             drawCircle(this.x, this.y, this.size);
-        } else if (shapeType == "star") {
-            drawStar(this.x, this.y, starSpike, this.size, this.size / 2);
-        } else if (shapeType == "squre") {
+        } else if (this.shapeType == "star") {
+            drawStar(
+                this.x,
+                this.y,
+                particleObj.starSpike,
+                this.size,
+                this.size / 2
+            );
+        } else if (this.shapeType == "squre") {
             ctx.beginPath();
             ctx.rect(this.x, this.y, this.size, this.size);
             ctx.closePath();
-        } else if (shapeType == "triangle"){
+        } else if (this.shapeType == "triangle") {
             drawStar(this.x, this.y, 3, this.size, this.size / 2);
-        } else if (shapeType == "hexagon"){
+        } else if (this.shapeType == "hexagon") {
             drawStar(this.x, this.y, 3, this.size, this.size);
-        } else if(shapeType=="stick"){
-            drawStar(this.x, this.y, 1, this.size, this.size);
-        } else if (shapeType == "snow"){
-            drawStar(this.x, this.y, snowStick, this.size, 0);
+        } else if (this.shapeType == "snow") {
+            drawStar(this.x, this.y, particleObj.snowStick, this.size, 0);
+            ctx.strokeStyle = this.color;
+            ctx.stroke();
+        } else {
+            drawCircle(this.x, this.y, this.size);
         }
-            if (shapeFill == true) {
-                ctx.fillStyle = this.color;
-                ctx.fill();
-            } else {
-                ctx.strokeStyle = this.color;
-                ctx.stroke();
-            }
+        if (particleObj.shapeFill) {
+            ctx.fillStyle = this.color;
+            ctx.fill();
+        } else {
+            ctx.strokeStyle = this.color;
+            ctx.stroke();
+        }
     }
     update() {
         if (this.x + this.size > canvas.width || this.x - this.size < 0) {
@@ -67,20 +115,27 @@ let hue = Math.floor(Math.random() * 360);
 //create particle
 function init() {
     particleArry = [];
-    for (let i = 0; i < particleNumber; i++) {
+    for (let i = 0; i < particleObj.particleNumber; i++) {
         hue += 2;
-        let size = Math.random() * (MaxSize - MinSize) + MinSize;
+        let size =
+            Math.random() * (particleObj.MaxSize - particleObj.MinSize) +
+            particleObj.MinSize;
         let x = Math.random() * (innerWidth - size * 2);
         let y = Math.random() * (innerHeight - size * 2);
-        let directionX = Math.random() * speed - speed / 2;
-        let directionY = Math.random() * speed - speed / 2;
+        let directionX =
+            Math.random() * particleObj.speed - particleObj.speed / 2;
+        let directionY =
+            Math.random() * particleObj.speed - particleObj.speed / 2;
         if (hue == 360) {
             hue = 0;
         }
         let color = `hsla(${hue},80%,50%,${(Math.random() + 1) / 2})`;
-
+        let shapeType =
+            particleObj.shapeArray[
+                Math.floor(Math.random() * particleObj.shapeArray.length)
+            ];
         particleArry.push(
-            new Particle(x, y, directionX, directionY, size, color)
+            new Particle(x, y, directionX, directionY, size, color, shapeType)
         );
     }
 }
