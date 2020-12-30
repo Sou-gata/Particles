@@ -7,18 +7,12 @@ let particleObj = {
     speed: 3,
     MinSize: 5,
     MaxSize: 10,
-    particleNumber: 300,
+    particleNumber: 200,
     starSpike: 6,
     snowStick: 10,
-    shapeArray: [
-        "star",
-        "circle",
-        "squre",
-        "triangle",
-        "hexagon",
-        "snow",
-    ],
-    shapeFill: false,
+    shapeArray: ["star", "circle", "squre", "triangle", "hexagon", "snow"],
+    shapeFill: true,
+    connect: true,
 };
 if (particleObj.speed == undefined) {
     //if objuct is undefined
@@ -75,9 +69,7 @@ class Particle {
                 this.size / 2
             );
         } else if (this.shapeType == "squre") {
-            ctx.beginPath();
-            ctx.rect(this.x, this.y, this.size, this.size);
-            ctx.closePath();
+            drawStar(this.x, this.y, 2, this.size, this.size);
         } else if (this.shapeType == "triangle") {
             drawStar(this.x, this.y, 3, this.size, this.size / 2);
         } else if (this.shapeType == "hexagon") {
@@ -112,6 +104,7 @@ class Particle {
     }
 }
 let hue = Math.floor(Math.random() * 360);
+let hue2 = Math.floor(Math.random() * 360);
 //create particle
 function init() {
     particleArry = [];
@@ -141,11 +134,14 @@ function init() {
 }
 
 function animate() {
-    requestAnimationFrame(animate);
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     for (let i = 0; i < particleArry.length; i++) {
         particleArry[i].update();
     }
+    if (particleObj.connect) {
+        connect();
+    }
+    requestAnimationFrame(animate);
 }
 init();
 animate();
@@ -182,4 +178,29 @@ function drawCircle(x, y, size) {
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2, false);
     ctx.closePath();
+}
+
+function connect() {
+    
+    if(hue2>360){
+        hue2=0;
+    }
+    let opacity = 1;
+    for (let a = 0; a < particleArry.length; a++) {
+        hue2 += 2;
+        for (let b = a; b < particleArry.length; b++) {
+            let dx = particleArry[a].x - particleArry[b].x;
+            let dy = particleArry[a].y - particleArry[b].y;
+            let distance = dx * dx + dy * dy;
+            if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+                opacity = 1 - distance / 7000;
+                ctx.strokeStyle = `hsla(${hue2},80%,50%,${opacity})`;
+                ctx.beginPath();
+                ctx.lineWidth = 1;
+                ctx.moveTo(particleArry[a].x, particleArry[a].y);
+                ctx.lineTo(particleArry[b].x, particleArry[b].y);
+                ctx.stroke();
+            }
+        }
+    }
 }
