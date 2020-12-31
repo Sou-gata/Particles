@@ -2,50 +2,26 @@ const canvas = document.querySelector(".canvas1");
 const ctx = canvas.getContext("2d");
 ctx.canvas.width = window.innerWidth;
 ctx.canvas.height = window.innerHeight;
-let particleArry;
+let particleArry = [];
+let hue = Math.floor(Math.random() * 360);
+let mouse = {
+    x: undefined,
+    y: undefined,
+};
+
 let particleObj = {
     speed: 3,
     MinSize: 5,
     MaxSize: 10,
     particleNumber: 200,
-    starSpike: 6,
+    starSpike: 5,
     snowStick: 10,
     shapeArray: ["star", "circle", "squre", "triangle", "hexagon", "snow"],
-    shapeFill: true,
-    connect: true,
+    shapeFill: false,
+    connect: false,
+    lineDistance: 5,
+    mouseConnect: true,
 };
-if (particleObj.speed == undefined) {
-    //if objuct is undefined
-    particleObj.speed = 2;
-}
-if (particleObj.MinSize == undefined) {
-    particleObj.MinSize = 5;
-}
-if (particleObj.MaxSize == undefined) {
-    particleObj.MaxSize = 10;
-}
-if (particleObj.particleNumber == undefined) {
-    particleObj.particleNumber = 200;
-}
-if (particleObj.starSpike == undefined) {
-    particleObj.starSpike = 6;
-}
-if (particleObj.snowStick == undefined) {
-    particleObj.snowStick = 10;
-}
-if (particleObj.shapeFill == undefined) {
-    particleObj.shapeFill = true;
-}
-if (particleObj.shapeArray == undefined) {
-    particleObj.shapeArray = [
-        "star",
-        "circle",
-        "squre",
-        "triangle",
-        "hexagon",
-        "snow",
-    ];
-}
 
 class Particle {
     constructor(x, y, directionX, directionY, size, color, shapeType) {
@@ -93,7 +69,7 @@ class Particle {
         if (this.x + this.size > canvas.width || this.x - this.size < 0) {
             this.directionX = -this.directionX;
         }
-        if (this.y + this.size > canvas.width || this.y - this.size < 0) {
+        if (this.y + this.size > canvas.height || this.y - this.size < 0) {
             this.directionY = -this.directionY;
         }
 
@@ -103,9 +79,9 @@ class Particle {
         this.draw();
     }
 }
-let hue = Math.floor(Math.random() * 360);
-let hue2 = Math.floor(Math.random() * 360);
+
 //create particle
+
 function init() {
     particleArry = [];
     for (let i = 0; i < particleObj.particleNumber; i++) {
@@ -122,7 +98,7 @@ function init() {
         if (hue == 360) {
             hue = 0;
         }
-        let color = `hsla(${hue},80%,50%,${(Math.random() + 1) / 2})`;
+        let color = `hsla(${hue},80%,50%,1)`;
         let shapeType =
             particleObj.shapeArray[
                 Math.floor(Math.random() * particleObj.shapeArray.length)
@@ -132,7 +108,6 @@ function init() {
         );
     }
 }
-
 function animate() {
     ctx.clearRect(0, 0, innerWidth, innerHeight);
     for (let i = 0; i < particleArry.length; i++) {
@@ -141,15 +116,15 @@ function animate() {
     if (particleObj.connect) {
         connect();
     }
+    if (particleObj.mouseConnect) {
+        connectMouse();
+    }
     requestAnimationFrame(animate);
 }
 init();
 animate();
-window.addEventListener("resize", () => {
-    canvas.width = innerWidth;
-    canvas.height = innerHeight;
-    init();
-});
+
+// Draw functions
 
 function drawStar(positionX, positionY, spikes, outerRadious, innerRadious) {
     let rotation = (Math.PI / 2) * 3;
@@ -173,28 +148,28 @@ function drawStar(positionX, positionY, spikes, outerRadious, innerRadious) {
     ctx.lineTo(positionX, positionY - outerRadious);
     ctx.closePath();
 }
-
 function drawCircle(x, y, size) {
     ctx.beginPath();
     ctx.arc(x, y, size, 0, Math.PI * 2, false);
     ctx.closePath();
 }
 
+// Connect functions
+
 function connect() {
-    
-    if(hue2>360){
-        hue2=0;
+    if (hue > 360) {
+        hue = 0;
     }
     let opacity = 1;
     for (let a = 0; a < particleArry.length; a++) {
-        hue2 += 2;
+        hue += 2;
         for (let b = a; b < particleArry.length; b++) {
             let dx = particleArry[a].x - particleArry[b].x;
             let dy = particleArry[a].y - particleArry[b].y;
             let distance = dx * dx + dy * dy;
             if (distance < (canvas.width / 7) * (canvas.height / 7)) {
-                opacity = 1 - distance / 7000;
-                ctx.strokeStyle = `hsla(${hue2},80%,50%,${opacity})`;
+                opacity = 1 - distance / (particleObj.lineDistance * 1000);
+                ctx.strokeStyle = `hsla(${hue},80%,50%,${opacity})`;
                 ctx.beginPath();
                 ctx.lineWidth = 1;
                 ctx.moveTo(particleArry[a].x, particleArry[a].y);
@@ -204,3 +179,40 @@ function connect() {
         }
     }
 }
+function connectMouse() {
+    if (hue > 360) {
+        hue = 0;
+    }
+    for (let a = 0; a < particleArry.length; a++) {
+        hue += 2;
+        let dx = particleArry[a].x - mouse.x;
+        let dy = particleArry[a].y - mouse.y;
+        let distance = dx * dx + dy * dy;
+        if (distance < (canvas.width / 7) * (canvas.height / 7)) {
+            opacity = 1 - distance / (particleObj.lineDistance * 3000);
+            ctx.strokeStyle = `hsla(${hue},80%,50%,${opacity})`;
+            ctx.beginPath();
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(mouse.x, mouse.y);
+            ctx.lineTo(particleArry[a].x, particleArry[a].y);
+            ctx.stroke();
+        }
+    }
+}
+
+// Event Listners
+
+window.addEventListener("resize", () => {
+    canvas.width = innerWidth;
+    canvas.height = innerHeight;
+    init();
+});
+window.addEventListener("mousemove", (e) => {
+    mouse.x = e.x;
+    mouse.y = e.y;
+});
+canvas.addEventListener("mouseleave", () => {
+    mouse.x = undefined;
+    mouse.y = undefined;
+    console.log('working')
+});
