@@ -1,3 +1,23 @@
+// Customization
+
+let particleObj = {
+    speed: 3,
+    MinSize: 5,
+    MaxSize: 7,
+    particleNumber: 150,
+    starSpike: 5,
+    snowStick: 10,
+    shapeArray: ["star", "circle", "squre", "triangle", "hexagon", "snow"],
+    shapeFill: false,
+    connect: false,
+    mouseConnect: false,
+    lineDistance: 5,
+    particleColor: "random", // random or colour code like #ff0000
+    connectLineHue: "random", // 'random' or hue range between 0 and 360
+    mouseLineColor: "random", // random or colour code like #ff0000
+    effectType: "bounce", // bounce or open
+};
+
 const canvas = document.querySelector(".canvas1");
 const ctx = canvas.getContext("2d");
 ctx.canvas.width = window.innerWidth;
@@ -8,21 +28,6 @@ let mouse = {
     x: undefined,
     y: undefined,
 };
-
-let particleObj = {
-    speed: 3,
-    MinSize: 5,
-    MaxSize: 10,
-    particleNumber: 200,
-    starSpike: 5,
-    snowStick: 10,
-    shapeArray: ["star", "circle", "squre", "triangle", "hexagon", "snow"],
-    shapeFill: false,
-    connect: false,
-    lineDistance: 5,
-    mouseConnect: true,
-};
-
 class Particle {
     constructor(x, y, directionX, directionY, size, color, shapeType) {
         this.x = x;
@@ -66,11 +71,26 @@ class Particle {
         }
     }
     update() {
-        if (this.x + this.size > canvas.width || this.x - this.size < 0) {
-            this.directionX = -this.directionX;
-        }
-        if (this.y + this.size > canvas.height || this.y - this.size < 0) {
-            this.directionY = -this.directionY;
+        if (particleObj.effectType == "bounce") {
+            if (this.x + this.size > canvas.width || this.x - this.size < 0) {
+                this.directionX = -this.directionX;
+            }
+            if (this.y + this.size > canvas.height || this.y - this.size < 0) {
+                this.directionY = -this.directionY;
+            }
+        } else if (particleObj.effectType == "open") {
+            if (this.x > canvas.width) {
+                this.x = 0 + this.size;
+            }
+            if (this.y - this.size > canvas.height) {
+                this.y = 0 + this.size;
+            }
+            if (this.y < 0) {
+                this.y = canvas.height;
+            }
+            if (this.x < 0) {
+                this.x = canvas.width;
+            }
         }
 
         this.x += this.directionX;
@@ -98,7 +118,12 @@ function init() {
         if (hue == 360) {
             hue = 0;
         }
-        let color = `hsla(${hue},80%,50%,1)`;
+        let color;
+        if (particleObj.particleColor == "random") {
+            color = `hsla(${hue},80%,50%,1)`;
+        } else {
+            color = particleObj.particleColor;
+        }
         let shapeType =
             particleObj.shapeArray[
                 Math.floor(Math.random() * particleObj.shapeArray.length)
@@ -110,14 +135,14 @@ function init() {
 }
 function animate() {
     ctx.clearRect(0, 0, innerWidth, innerHeight);
-    for (let i = 0; i < particleArry.length; i++) {
-        particleArry[i].update();
-    }
     if (particleObj.connect) {
         connect();
     }
     if (particleObj.mouseConnect) {
         connectMouse();
+    }
+    for (let i = 0; i < particleArry.length; i++) {
+        particleArry[i].update();
     }
     requestAnimationFrame(animate);
 }
@@ -139,7 +164,6 @@ function drawStar(positionX, positionY, spikes, outerRadious, innerRadious) {
         y = positionY + Math.sin(rotation) * outerRadious;
         ctx.lineTo(x, y);
         rotation += step;
-
         x = positionX + Math.cos(rotation) * innerRadious;
         y = positionY + Math.sin(rotation) * innerRadious;
         ctx.lineTo(x, y);
@@ -169,9 +193,13 @@ function connect() {
             let distance = dx * dx + dy * dy;
             if (distance < (canvas.width / 7) * (canvas.height / 7)) {
                 opacity = 1 - distance / (particleObj.lineDistance * 1000);
-                ctx.strokeStyle = `hsla(${hue},80%,50%,${opacity})`;
+                if (particleObj.connectLineHue == "random") {
+                    ctx.strokeStyle = `hsla(${hue},80%,50%,${opacity})`;
+                } else {
+                    ctx.strokeStyle = `hsla(${particleObj.connectLineHue},80%,50%,${opacity})`;
+                }
                 ctx.beginPath();
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 2;
                 ctx.moveTo(particleArry[a].x, particleArry[a].y);
                 ctx.lineTo(particleArry[b].x, particleArry[b].y);
                 ctx.stroke();
@@ -189,8 +217,11 @@ function connectMouse() {
         let dy = particleArry[a].y - mouse.y;
         let distance = dx * dx + dy * dy;
         if (distance < (canvas.width / 7) * (canvas.height / 7)) {
-            opacity = 1 - distance / (particleObj.lineDistance * 3000);
-            ctx.strokeStyle = `hsla(${hue},80%,50%,${opacity})`;
+            if (particleObj.mouseLineColor == "random") {
+                ctx.strokeStyle = `hsla(${hue},80%,50%,0.75)`;
+            } else {
+                ctx.strokeStyle = particleObj.mouseLineColor;
+            }
             ctx.beginPath();
             ctx.lineWidth = 1.5;
             ctx.moveTo(mouse.x, mouse.y);
@@ -214,5 +245,4 @@ window.addEventListener("mousemove", (e) => {
 canvas.addEventListener("mouseleave", () => {
     mouse.x = undefined;
     mouse.y = undefined;
-    console.log('working')
 });
