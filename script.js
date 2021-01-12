@@ -7,16 +7,16 @@ let particleObj = {
     particleNumber: 150,
     starSpike: 5,
     snowStick: 10,
-    shapeArray: ["star", "circle", "squre", "triangle", "hexagon", "snow"],
+    shapesType: ["star", "circle", "squre", "triangle", "hexagon", "snow"],
     shapeFill: false,
     connect: false,
     mouseConnect: false,
     lineDistance: 5,
-    particleColor: "random", // random or colour code like #ff0000
+    particleColor: "random", // ['red','green','blue'] // random or colour code like #ff0000
     connectLineHue: "random", // 'random' or hue range between 0 and 360
     mouseLineColor: "random", // random or colour code like #ff0000
     effectType: "open", // bounce or open
-    direction: "bottom", // top,right,bottom,left,top-left,top-right,bottom-right,bottom-left,random
+    direction: "bottom-right", // top,right,bottom,left,top-left,top-right,bottom-right,bottom-left,random
 };
 
 const canvas = document.querySelector(".canvas1");
@@ -80,16 +80,16 @@ class Particle {
                 this.directionY = -this.directionY;
             }
         } else if (particleObj.effectType == "open") {
-            if (this.x > canvas.width) {
-                this.x = 0 + this.size;
+            if (this.x > canvas.width + this.size) {
+                this.x = -this.size;
             }
-            if (this.y - this.size > canvas.height) {
-                this.y = 0;
+            if (this.y > canvas.height + this.size) {
+                this.y = -this.size;
             }
-            if (this.y < 0) {
+            if (this.y + this.size < 0) {
                 this.y = canvas.height;
             }
-            if (this.x < 0) {
+            if (this.x + this.size < 0) {
                 this.x = canvas.width;
             }
         }
@@ -115,19 +115,30 @@ function init() {
         let directionXY = particleDirection();
         let directionX = directionXY.directionX;
         let directionY = directionXY.directionY;
-        if (hue == 360) {
-            hue = 0;
-        }
         let color;
-        if (particleObj.particleColor == "random") {
-            color = `hsla(${hue},80%,50%,1)`;
+        if (Array.isArray(particleObj.particleColor)) {
+            color =
+                particleObj.particleColor[
+                    Math.floor(Math.random() * particleObj.particleColor.length)
+                ];
         } else {
-            color = particleObj.particleColor;
+            if (hue == 360) {
+                hue = 0;
+            }
+            if (particleObj.particleColor == "random") {
+                color = `hsla(${hue},80%,50%,1)`;
+            } else {
+                color = particleObj.particleColor;
+            }
         }
-        let shapeType =
-            particleObj.shapeArray[
-                Math.floor(Math.random() * particleObj.shapeArray.length)
-            ];
+        if (Array.isArray(particleObj.shapesType)) {
+            shapeType =
+                particleObj.shapesType[
+                    Math.floor(Math.random() * particleObj.shapesType.length)
+                ];
+        } else {
+            shapeType = particleObj.shapesType;
+        }
         particleArry.push(
             new Particle(x, y, directionX, directionY, size, color, shapeType)
         );
@@ -155,44 +166,35 @@ function particleDirection() {
     if (particleObj.direction == "bottom") {
         directionX = Math.random() * particleObj.speed - particleObj.speed / 2;
         directionY = (Math.random() * particleObj.speed) / 2 + 0.5;
-        return { directionX, directionY };
     } else if (particleObj.direction == "top") {
         directionX = Math.random() * particleObj.speed - particleObj.speed / 2;
         directionY = ((Math.random() * particleObj.speed) / 2 + 0.5) * -1;
-        return { directionX, directionY };
     } else if (particleObj.direction == "right") {
         directionX = (Math.random() * particleObj.speed) / 2 + 0.5;
         directionY = Math.random() * particleObj.speed - particleObj.speed / 2;
-        return { directionX, directionY };
     } else if (particleObj.direction == "left") {
         directionX = ((Math.random() * particleObj.speed) / 2 + 0.5) * -1;
         directionY = Math.random() * particleObj.speed - particleObj.speed / 2;
-        return { directionX, directionY };
     } else if (particleObj.direction == "bottom-right") {
         directionX = (Math.random() * particleObj.speed) / 2 + 0.5;
         directionY = (Math.random() * particleObj.speed) / 2 + 0.5;
-        return { directionX, directionY };
     } else if (particleObj.direction == "bottom-left") {
         directionX = ((Math.random() * particleObj.speed) / 2 + 0.5) * -1;
         directionY = (Math.random() * particleObj.speed) / 2 + 0.5;
-        return { directionX, directionY };
     } else if (particleObj.direction == "top-right") {
         directionX = (Math.random() * particleObj.speed) / 2 + 0.5;
         directionY = ((Math.random() * particleObj.speed) / 2 + 0.5) * -1;
-        return { directionX, directionY };
     } else if (particleObj.direction == "top-left") {
         directionX = ((Math.random() * particleObj.speed) / 2 + 0.5) * -1;
         directionY = ((Math.random() * particleObj.speed) / 2 + 0.5) * -1;
-        return { directionX, directionY };
     } else if (particleObj.direction == "random") {
         directionX = Math.random() * particleObj.speed - particleObj.speed / 2;
         directionY = Math.random() * particleObj.speed - particleObj.speed / 2;
-        return { directionX, directionY };
     } else {
         directionX = 0;
         directionY = 0;
-        return { directionX, directionY };
     }
+    return { directionX, directionY };
 }
 
 // Draw functions
